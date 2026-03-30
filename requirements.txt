@@ -1,0 +1,8 @@
+pandas
+openpyxl
+playwright
+rapidfuzz
+streamlit
+streamlit-autorefresh
+lxml
+html5lib
