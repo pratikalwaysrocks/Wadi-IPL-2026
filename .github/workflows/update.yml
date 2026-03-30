@@ -1,0 +1,38 @@
+name: IPL Auto Update
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 minutes
+  workflow_dispatch:         # manual trigger button
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install chromium
+
+      - name: Run scraper
+        run: python ipl_stats_scraper.py
+
+      - name: Run fantasy system
+        run: python fantasy_points_from_stats.py
+
+      - name: Commit updated files
+        run: |
+          git config user.name "auto-bot"
+          git config user.email "auto@github.com"
+          git add *.xlsx
+          git diff --cached --quiet || git commit -m "auto update data"
+          git push
