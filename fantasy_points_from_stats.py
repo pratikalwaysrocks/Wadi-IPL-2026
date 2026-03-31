@@ -1,8 +1,9 @@
-import pandas as pd
-from pathlib import Path
-from rapidfuzz import process, fuzz
 import re
+from pathlib import Path
 from typing import Optional, Tuple
+
+import pandas as pd
+from rapidfuzz import process, fuzz
 
 BASE_DIR = Path(__file__).parent
 STATS_FILE = BASE_DIR / "ipl_stats_2026.xlsx"
@@ -26,9 +27,6 @@ COMMON_SURNAMES = {
     "singh", "sharma", "khan", "yadav", "kumar", "patel", "shah", "ali"
 }
 
-TEAM_CODES = ["CSK", "MI", "RCB", "KKR", "SRH", "RR", "DC", "PBKS", "GT", "LSG"]
-
-# Names that should NEVER be auto-fuzzy-matched to someone else
 STRICT_NO_FUZZY = {
     "akshat raghuvanshi",
     "angkrish raghuvanshi",
@@ -61,10 +59,10 @@ def normalize_name(name: str) -> str:
     name = name.replace(".", " ")
     name = re.sub(r"\s+", " ", name)
 
-    # remove bracketed team codes
+    # remove bracketed IPL team codes like "(MI)"
     name = re.sub(r"\((csk|mi|rcb|kkr|srh|rr|dc|pbks|gt|lsg)\)", "", name)
 
-    # remove standalone team codes
+    # remove standalone IPL team codes
     name = re.sub(r"\b(csk|mi|rcb|kkr|srh|rr|dc|pbks|gt|lsg)\b", "", name)
 
     # normalize separators
@@ -98,17 +96,11 @@ def initials(name: str) -> str:
 
 
 def same_last_name(a: str, b: str) -> bool:
-    return last_token(a) != "" and last_token(a) == last_token(b)
-
-
-def same_first_initial(a: str, b: str) -> bool:
-    fa = first_token(a)
-    fb = first_token(b)
-    return bool(fa and fb and fa[0] == fb[0])
+    return bool(last_token(a)) and last_token(a) == last_token(b)
 
 
 def same_first_name(a: str, b: str) -> bool:
-    return first_token(a) != "" and first_token(a) == first_token(b)
+    return bool(first_token(a)) and first_token(a) == first_token(b)
 
 
 def token_overlap_ratio(a: str, b: str) -> float:
@@ -119,14 +111,14 @@ def token_overlap_ratio(a: str, b: str) -> float:
     return len(ta & tb) / max(len(ta), len(tb))
 
 
+def first_name_similarity(a: str, b: str) -> int:
+    return fuzz.ratio(first_token(a), first_token(b))
+
+
 def is_blocked_pair(a: str, b: str) -> bool:
     a = canonical_name(a)
     b = canonical_name(b)
     return (a, b) in BLOCKED_MATCH_PAIRS
-
-
-def first_name_similarity(a: str, b: str) -> int:
-    return fuzz.ratio(first_token(a), first_token(b))
 
 
 def passes_structure_guard(player: str, candidate: str) -> bool:
@@ -134,7 +126,7 @@ def passes_structure_guard(player: str, candidate: str) -> bool:
     candidate = canonical_name(candidate)
 
     if is_blocked_pair(player, candidate):
-    	return False
+        return False
 
     # surname must match
     if not same_last_name(player, candidate):
@@ -152,22 +144,22 @@ def passes_structure_guard(player: str, candidate: str) -> bool:
     if player_first == candidate_first:
         return True
 
-    # for common surnames, require very strong first-name match
+    # common surnames need very strong first-name similarity
     if surname in COMMON_SURNAMES:
         return first_name_similarity(player, candidate) >= 90
 
-    # for rarer surnames, allow strong fuzzy first-name similarity
+    # rarer surnames can allow slightly softer similarity
     return first_name_similarity(player, candidate) >= 85
 
 
 def ai_style_match(player: str, stats_names: list[str]) -> Tuple[Optional[str], str]:
     player = canonical_name(player)
 
-    # 1. exact
+    # 1. exact / alias
     if player in stats_names:
         return player, "exact/alias"
 
-    # 2. initials/full-name structured exact candidate
+    # 2. structured initials/full-name match
     player_initials = initials(player)
     strong_candidates = []
     for s in stats_names:
@@ -186,7 +178,6 @@ def ai_style_match(player: str, stats_names: list[str]) -> Tuple[Optional[str], 
         if passes_structure_guard(player, candidate):
             overlap = token_overlap_ratio(player, candidate)
 
-            # strongest acceptance only
             if score >= 94:
                 return candidate, f"ai_fuzzy_strong:{score}"
 
@@ -199,7 +190,7 @@ def ai_style_match(player: str, stats_names: list[str]) -> Tuple[Optional[str], 
     return None, "no_stats_yet"
 
 
-def load_players():
+def load_players() -> pd.DataFrame:
     df = pd.read_csv(PLAYERS_FILE)
     df.columns = df.columns.str.strip()
 
@@ -221,7 +212,7 @@ def load_players():
     return df
 
 
-def find_column(df, candidates):
+def find_column(df: pd.DataFrame, candidates: list[str]) -> str:
     cols_lower = {str(col).strip().lower(): col for col in df.columns}
 
     for candidate in candidates:
@@ -229,17 +220,19 @@ def find_column(df, candidates):
         if candidate_lower in cols_lower:
             return cols_lower[candidate_lower]
 
-    # fallback: partial match
     for col in df.columns:
         col_lower = str(col).strip().lower()
         for candidate in candidates:
             if candidate.strip().lower() in col_lower:
                 return col
 
-    raise KeyError(f"Could not find any of these columns: {candidates}. Available columns: {list(df.columns)}")
+    raise KeyError(
+        f"Could not find any of these columns: {candidates}. "
+        f"Available columns: {list(df.columns)}"
+    )
 
 
-def load_stats():
+def load_stats() -> pd.DataFrame:
     orange = pd.read_excel(STATS_FILE, sheet_name="Orange_Cap")
     purple = pd.read_excel(STATS_FILE, sheet_name="Purple_Cap")
 
@@ -268,6 +261,7 @@ def load_stats():
     stats_df["Runs"] = stats_df["Runs"].astype(int)
     stats_df["Wkts"] = stats_df["Wkts"].astype(int)
 
+    # collapse duplicates safely
     stats_df = (
         stats_df.groupby("Player", as_index=False)[["Runs", "Wkts"]]
         .max()
@@ -276,7 +270,7 @@ def load_stats():
     return stats_df
 
 
-def match_players(players_df, stats_df):
+def match_players(players_df: pd.DataFrame, stats_df: pd.DataFrame) -> pd.DataFrame:
     stats_names = stats_df["Player"].tolist()
 
     resolved_names = []
@@ -303,7 +297,7 @@ def match_players(players_df, stats_df):
     return out
 
 
-def calculate_points(players_df, stats_df):
+def calculate_points(players_df: pd.DataFrame, stats_df: pd.DataFrame) -> pd.DataFrame:
     players_df = match_players(players_df, stats_df)
 
     merged = pd.merge(
@@ -312,7 +306,7 @@ def calculate_points(players_df, stats_df):
         left_on="Matched_Player",
         right_on="Player",
         how="left",
-        suffixes=("_Team", "_Stats")
+        suffixes=("_Team", "_Stats"),
     ).fillna(0)
 
     merged["Runs"] = pd.to_numeric(merged["Runs"], errors="coerce").fillna(0).astype(int)
@@ -328,25 +322,27 @@ def calculate_points(players_df, stats_df):
 
     merged["Points"] = merged["Batting_Points"] + merged["Bowling_Points"]
 
-    final_df = merged[[
-        "Player_Original",
-        "Team",
-        "Role",
-        "Matched_Player",
-        "Suggested_Match",
-        "Match_Type",
-        "Runs",
-        "Wkts",
-        "Batting_Points",
-        "Bowling_Points",
-        "Points",
-    ]].copy()
+    final_df = merged[
+        [
+            "Player_Original",
+            "Team",
+            "Role",
+            "Matched_Player",
+            "Suggested_Match",
+            "Match_Type",
+            "Runs",
+            "Wkts",
+            "Batting_Points",
+            "Bowling_Points",
+            "Points",
+        ]
+    ].copy()
 
     final_df = final_df.rename(columns={"Player_Original": "Player"})
     return final_df
 
 
-def build_leaderboard(points_df):
+def build_leaderboard(points_df: pd.DataFrame) -> pd.DataFrame:
     leaderboard = (
         points_df.groupby("Team", as_index=False)["Points"]
         .sum()
@@ -368,7 +364,6 @@ def main():
     mismatch_df = points_df[
         points_df["Match_Type"].astype(str).str.contains("possible_mismatch", na=False)
     ].copy()
-
     ai_matches_df = points_df[
         points_df["Match_Type"].astype(str).str.contains("ai_", na=False)
     ].copy()
