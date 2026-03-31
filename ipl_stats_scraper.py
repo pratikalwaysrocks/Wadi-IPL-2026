@@ -1,4 +1,5 @@
 import re
+from io import StringIO
 from pathlib import Path
 
 import pandas as pd
@@ -9,174 +10,13 @@ OUTPUT_XLSX = BASE_DIR / "ipl_stats_2026.xlsx"
 MYKHEL_URL = "https://www.mykhel.com/cricket/ipl-stats-s4/"
 
 
-def clean_player_name(name: str) -> str:
-    name = str(name).strip()
-    name = re.sub(r"\s*\([A-Z]+\)\s*$", "", name)  # remove trailing team code like (MI)
-    name = re.sub(r"^\[\d+\]\s*", "", name)        # remove leading link refs if any
-    name = re.sub(r"\s+", " ", name)
-    return name.strip()
+def clean_text(value):
+    return re.sub(r"\s+", " ", str(value)).strip()
 
 
-def normalize_lines(text: str) -> list[str]:
-    lines = [line.strip() for line in text.splitlines()]
-    return [line for line in lines if line]
-
-
-def find_block_after_header(lines: list[str], header_keywords: list[str], stop_keywords: list[str]) -> list[str]:
-    start_idx = None
-
-    for i, line in enumerate(lines):
-        lower = line.lower()
-        if all(k.lower() in lower for k in header_keywords):
-            start_idx = i + 1
-            break
-
-    if start_idx is None:
-        return []
-
-    end_idx = len(lines)
-    for i in range(start_idx, len(lines)):
-        lower = lines[i].lower()
-        if any(stop.lower() in lower for stop in stop_keywords):
-            end_idx = i
-            break
-
-    return lines[start_idx:end_idx]
-
-
-def next_useful_line(lines: list[str], idx: int) -> tuple[int, str]:
-    while idx < len(lines):
-        line = lines[idx].strip()
-        lower = line.lower()
-
-        if not line:
-            idx += 1
-            continue
-
-        if "image:" in lower:
-            idx += 1
-            continue
-
-        if "player head" in lower:
-            idx += 1
-            continue
-
-        if "pos player" in lower:
-            idx += 1
-            continue
-
-        return idx, line
-
-    return idx, ""
-
-
-def parse_batting_section(lines: list[str]) -> pd.DataFrame:
-    rows = []
-    i = 0
-
-    while i < len(lines):
-        line = lines[i].strip()
-
-        if not line.isdigit():
-            i += 1
-            continue
-
-        pos = int(line)
-
-        j, player_line = next_useful_line(lines, i + 1)
-        if not player_line:
-            break
-
-        player = clean_player_name(player_line)
-
-        k, stats_line = next_useful_line(lines, j + 1)
-        if not stats_line:
-            break
-
-        parts = stats_line.split()
-        # MATCHES INN RUNS SR 4s 6s
-        if len(parts) < 6:
-            i = k + 1
-            continue
-
-        matches, inns, runs, sr, fours, sixes = parts[:6]
-
-        rows.append({
-            "POS": pos,
-            "Player": player,
-            "Matches": matches,
-            "Inns": inns,
-            "Runs": runs,
-            "SR": sr,
-            "4s": fours,
-            "6s": sixes,
-        })
-
-        i = k + 1
-
-    df = pd.DataFrame(rows)
-    if not df.empty:
-        df["POS"] = pd.to_numeric(df["POS"], errors="coerce")
-        df["Matches"] = pd.to_numeric(df["Matches"], errors="coerce")
-        df["Inns"] = pd.to_numeric(df["Inns"], errors="coerce")
-        df["Runs"] = pd.to_numeric(df["Runs"], errors="coerce")
-        df["SR"] = pd.to_numeric(df["SR"].replace("-", None), errors="coerce")
-        df["4s"] = pd.to_numeric(df["4s"].replace("-", 0), errors="coerce").fillna(0).astype(int)
-        df["6s"] = pd.to_numeric(df["6s"].replace("-", 0), errors="coerce").fillna(0).astype(int)
-    return df
-
-
-def parse_bowling_section(lines: list[str]) -> pd.DataFrame:
-    rows = []
-    i = 0
-
-    while i < len(lines):
-        line = lines[i].strip()
-
-        if not line.isdigit():
-            i += 1
-            continue
-
-        pos = int(line)
-
-        j, player_line = next_useful_line(lines, i + 1)
-        if not player_line:
-            break
-
-        player = clean_player_name(player_line)
-
-        k, stats_line = next_useful_line(lines, j + 1)
-        if not stats_line:
-            break
-
-        parts = stats_line.split()
-        # MATCHES INN BALLS WKTS 5Wkts
-        if len(parts) < 5:
-            i = k + 1
-            continue
-
-        matches, inns, balls, wkts, five_wkts = parts[:5]
-
-        rows.append({
-            "POS": pos,
-            "Player": player,
-            "Matches": matches,
-            "Inns": inns,
-            "Balls": balls,
-            "Wkts": wkts,
-            "5Wkts": five_wkts,
-        })
-
-        i = k + 1
-
-    df = pd.DataFrame(rows)
-    if not df.empty:
-        df["POS"] = pd.to_numeric(df["POS"], errors="coerce")
-        df["Matches"] = pd.to_numeric(df["Matches"], errors="coerce")
-        df["Inns"] = pd.to_numeric(df["Inns"], errors="coerce")
-        df["Balls"] = pd.to_numeric(df["Balls"], errors="coerce")
-        df["Wkts"] = pd.to_numeric(df["Wkts"], errors="coerce")
-        df["5Wkts"] = pd.to_numeric(df["5Wkts"].replace("-", 0), errors="coerce").fillna(0).astype(int)
+def clean_columns(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df.columns = [clean_text(c) for c in df.columns]
     return df
 
 
@@ -190,40 +30,121 @@ def dismiss_cookies(page):
             pass
 
 
-def get_body_lines(page) -> list[str]:
-    text = page.locator("body").inner_text()
-    return normalize_lines(text)
+def click_tab(page, tab_name: str) -> bool:
+    # try multiple selectors
+    selectors = [
+        lambda: page.get_by_role("tab", name=tab_name),
+        lambda: page.get_by_role("button", name=tab_name),
+        lambda: page.get_by_text(tab_name, exact=True),
+        lambda: page.get_by_text(tab_name, exact=False),
+    ]
 
+    for selector in selectors:
+        try:
+            loc = selector()
+            if loc.count() > 0:
+                loc.last.click(timeout=5000, force=True)
+                page.wait_for_timeout(3000)
+                return True
+        except Exception:
+            pass
 
-def click_bowling_tab(page):
-    # Try text click first
+    # JS fallback
     try:
-        page.get_by_text("Bowling", exact=True).last.click(timeout=5000)
-        page.wait_for_timeout(3000)
-        return
+        clicked = page.evaluate(
+            """
+            (tabName) => {
+                const nodes = Array.from(document.querySelectorAll('a, button, div, span, li'));
+                const target = nodes.find(el => {
+                    if (el.offsetParent === null) return false;
+                    const txt = (el.textContent || '').trim().toLowerCase();
+                    return txt === tabName.toLowerCase() || txt.includes(tabName.toLowerCase());
+                });
+                if (target) {
+                    target.click();
+                    return true;
+                }
+                return false;
+            }
+            """,
+            tab_name,
+        )
+        if clicked:
+            page.wait_for_timeout(3000)
+            return True
     except Exception:
         pass
 
-    # JS fallback
-    page.evaluate("""
-        () => {
-            const nodes = Array.from(document.querySelectorAll('a, button, span, div'));
-            const target = nodes.find(el =>
-                el.offsetParent !== null &&
-                (el.textContent || '').trim().toLowerCase() === 'bowling'
-            );
-            if (target) target.click();
-        }
-    """)
-    page.wait_for_timeout(3000)
+    return False
+
+
+def extract_tables_from_html(html: str) -> list[pd.DataFrame]:
+    try:
+        tables = pd.read_html(StringIO(html))
+        return [clean_columns(df) for df in tables]
+    except Exception:
+        return []
+
+
+def choose_batting_table(tables: list[pd.DataFrame]) -> pd.DataFrame | None:
+    best = None
+    best_rows = -1
+
+    for df in tables:
+        cols = [str(c).lower() for c in df.columns]
+        joined = " ".join(cols)
+
+        if "player" in joined and "runs" in joined and ("matches" in joined or "mat" in joined):
+            if len(df) > best_rows:
+                best = df
+                best_rows = len(df)
+
+    return best
+
+
+def choose_bowling_table(tables: list[pd.DataFrame]) -> pd.DataFrame | None:
+    best = None
+    best_rows = -1
+
+    for df in tables:
+        cols = [str(c).lower() for c in df.columns]
+        joined = " ".join(cols)
+
+        bowling_signals = ["wkts", "wickets", "balls", "5wkts", "5 wickets", "five wickets"]
+        if "player" in joined and any(sig in joined for sig in bowling_signals):
+            if len(df) > best_rows:
+                best = df
+                best_rows = len(df)
+
+    return best
+
+
+def normalize_player_column(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    # normalize common player column name
+    for col in df.columns:
+        if str(col).strip().lower() == "player":
+            df = df.rename(columns={col: "Player"})
+            break
+
+    if "Player" in df.columns:
+        df["Player"] = (
+            df["Player"]
+            .astype(str)
+            .str.replace(r"\s*\([A-Z]+\)\s*$", "", regex=True)
+            .str.strip()
+        )
+
+    return df
 
 
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(
-    headless=True,
-    args=["--no-sandbox", "--disable-dev-shm-usage"]
-)
+            headless=True,
+            args=["--no-sandbox", "--disable-dev-shm-usage"]
+        )
         context = browser.new_context(
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -240,51 +161,51 @@ def main():
         page.wait_for_timeout(8000)
         dismiss_cookies(page)
 
-        # Batting block from default view
-        batting_lines_all = get_body_lines(page)
-        batting_lines = find_block_after_header(
-            batting_lines_all,
-            header_keywords=["POS", "PLAYER", "MATCHES", "INN", "RUNS", "SR", "4s", "6s"],
-            stop_keywords=[
-                "Most Wickets",
-                "Best Average",
-                "Most Five-Wicket",
-                "Best Economy",
-                "Team Runs Scored",
-            ],
-        )
+        # --- Batting (default view) ---
+        batting_html = page.content()
+        batting_tables = extract_tables_from_html(batting_html)
+        print(f"Tables found on batting view: {len(batting_tables)}")
 
-        print(f"Batting block lines: {len(batting_lines)}")
+        orange_df = choose_batting_table(batting_tables)
+        if orange_df is not None:
+            orange_df = normalize_player_column(orange_df)
 
-        # Switch to Bowling and read page again
-        click_bowling_tab(page)
-        bowling_lines_all = get_body_lines(page)
-        bowling_lines = find_block_after_header(
-            bowling_lines_all,
-            header_keywords=["POS", "PLAYER", "MATCHES", "INN", "BALLS", "WKTS", "5Wkts"],
-            stop_keywords=[
-                "Best Average",
-                "Most Five-Wicket",
-                "Best Economy",
-                "Team Runs Scored",
-                "Player Comparison",
-            ],
-        )
+        # --- Bowling ---
+        clicked = click_tab(page, "Bowling")
+        print(f"Bowling tab clicked: {clicked}")
 
-        print(f"Bowling block lines: {len(bowling_lines)}")
+        page.wait_for_timeout(4000)
+        bowling_html = page.content()
+        bowling_tables = extract_tables_from_html(bowling_html)
+        print(f"Tables found on bowling view: {len(bowling_tables)}")
 
-        orange_df = parse_batting_section(batting_lines)
-        purple_df = parse_bowling_section(bowling_lines)
+        purple_df = choose_bowling_table(bowling_tables)
+        if purple_df is not None:
+            purple_df = normalize_player_column(purple_df)
+
+        # retry once if needed
+        if purple_df is None:
+            print("Bowling table not found on first try, retrying...")
+            click_tab(page, "Bowling")
+            page.wait_for_timeout(4000)
+            bowling_html = page.content()
+            bowling_tables = extract_tables_from_html(bowling_html)
+            print(f"Tables found on bowling retry: {len(bowling_tables)}")
+            purple_df = choose_bowling_table(bowling_tables)
+            if purple_df is not None:
+                purple_df = normalize_player_column(purple_df)
 
         browser.close()
 
-    if orange_df.empty:
-        raise ValueError("Could not parse batting stats from MyKhel page text.")
-    if purple_df.empty:
-        raise ValueError("Could not parse bowling stats from MyKhel page text.")
+    if orange_df is None or orange_df.empty:
+        raise ValueError("Could not parse batting stats from MyKhel page HTML.")
+
+    if purple_df is None or purple_df.empty:
+        raise ValueError("Could not parse bowling stats from MyKhel page HTML.")
 
     print(f"Orange rows: {len(orange_df)}")
     print("Orange columns:", list(orange_df.columns))
+
     print(f"Purple rows: {len(purple_df)}")
     print("Purple columns:", list(purple_df.columns))
 

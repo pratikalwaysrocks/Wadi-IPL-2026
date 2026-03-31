@@ -42,12 +42,17 @@ STRICT_NO_FUZZY = {
     "abhishek sharma",
 }
 
-# Optional manual hard-block wrong pairs
 BLOCKED_MATCH_PAIRS = {
     ("akshat raghuvanshi", "angkrish raghuvanshi"),
     ("angkrish raghuvanshi", "akshat raghuvanshi"),
     ("jitesh sharma", "brijesh sharma"),
     ("brijesh sharma", "jitesh sharma"),
+    ("arshdeep singh", "abhinandan singh"),
+    ("abhinandan singh", "arshdeep singh"),
+    ("shahrukh khan", "sarfaraz khan"),
+    ("sarfaraz khan", "shahrukh khan"),
+    ("ashutosh sharma", "abhishek sharma"),
+    ("abhishek sharma", "ashutosh sharma"),
 }
 
 
@@ -129,7 +134,7 @@ def passes_structure_guard(player: str, candidate: str) -> bool:
     candidate = canonical_name(candidate)
 
     if is_blocked_pair(player, candidate):
-        return False
+    	return False
 
     # surname must match
     if not same_last_name(player, candidate):
@@ -216,6 +221,24 @@ def load_players():
     return df
 
 
+def find_column(df, candidates):
+    cols_lower = {str(col).strip().lower(): col for col in df.columns}
+
+    for candidate in candidates:
+        candidate_lower = candidate.strip().lower()
+        if candidate_lower in cols_lower:
+            return cols_lower[candidate_lower]
+
+    # fallback: partial match
+    for col in df.columns:
+        col_lower = str(col).strip().lower()
+        for candidate in candidates:
+            if candidate.strip().lower() in col_lower:
+                return col
+
+    raise KeyError(f"Could not find any of these columns: {candidates}. Available columns: {list(df.columns)}")
+
+
 def load_stats():
     orange = pd.read_excel(STATS_FILE, sheet_name="Orange_Cap")
     purple = pd.read_excel(STATS_FILE, sheet_name="Purple_Cap")
@@ -223,8 +246,17 @@ def load_stats():
     orange.columns = orange.columns.str.strip()
     purple.columns = purple.columns.str.strip()
 
-    orange_df = orange[["Player", "Runs"]].copy()
-    purple_df = purple[["Player", "Wkts"]].copy()
+    orange_player_col = find_column(orange, ["Player"])
+    orange_runs_col = find_column(orange, ["Runs", "Run", "Most Runs", "RUNS"])
+
+    purple_player_col = find_column(purple, ["Player"])
+    purple_wkts_col = find_column(purple, ["Wkts", "Wickets", "WKTS", "Most Wickets"])
+
+    orange_df = orange[[orange_player_col, orange_runs_col]].copy()
+    purple_df = purple[[purple_player_col, purple_wkts_col]].copy()
+
+    orange_df.columns = ["Player", "Runs"]
+    purple_df.columns = ["Player", "Wkts"]
 
     orange_df["Player"] = orange_df["Player"].apply(canonical_name)
     purple_df["Player"] = purple_df["Player"].apply(canonical_name)
@@ -236,7 +268,6 @@ def load_stats():
     stats_df["Runs"] = stats_df["Runs"].astype(int)
     stats_df["Wkts"] = stats_df["Wkts"].astype(int)
 
-    # collapse duplicates safely if any source repeats a player
     stats_df = (
         stats_df.groupby("Player", as_index=False)[["Runs", "Wkts"]]
         .max()
@@ -247,16 +278,27 @@ def load_stats():
 
 def match_players(players_df, stats_df):
     stats_names = stats_df["Player"].tolist()
+
     resolved_names = []
+    suggested_names = []
     match_notes = []
 
     for player in players_df["Player"]:
         matched_name, note = ai_style_match(player, stats_names)
-        resolved_names.append(matched_name if matched_name is not None else player)
-        match_notes.append(note)
+
+        if matched_name is not None:
+            resolved_names.append(matched_name)
+            suggested_names.append("")
+            match_notes.append(note)
+        else:
+            resolved_names.append("")
+            suggestion = process.extractOne(player, stats_names, scorer=fuzz.ratio)
+            suggested_names.append(suggestion[0] if suggestion else "")
+            match_notes.append(note)
 
     out = players_df.copy()
     out["Matched_Player"] = resolved_names
+    out["Suggested_Match"] = suggested_names
     out["Match_Type"] = match_notes
     return out
 
@@ -281,7 +323,6 @@ def calculate_points(players_df, stats_df):
 
     merged.loc[merged["Role"] == "BAT", "Batting_Points"] = merged["Runs"]
     merged.loc[merged["Role"] == "BOWL", "Bowling_Points"] = merged["Wkts"] * 20
-
     merged.loc[merged["Role"] == "AR", "Batting_Points"] = merged["Runs"]
     merged.loc[merged["Role"] == "AR", "Bowling_Points"] = merged["Wkts"] * 20
 
@@ -292,6 +333,7 @@ def calculate_points(players_df, stats_df):
         "Team",
         "Role",
         "Matched_Player",
+        "Suggested_Match",
         "Match_Type",
         "Runs",
         "Wkts",
