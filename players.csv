@@ -2,7 +2,7 @@ Player,Team,Role
 MS Dhoni CSK,NIRAV11,BAT
 Rishabh Pant LSG,NIRAV11,BAT
 Travis Head srh,NIRAV11,BAT
-Jitesh Sharma,NIRAV11,BAT
+jitesh sharma,NIRAV11,BAT
 rajat patidar,NIRAV11,BAT
 Dewald Brevis,NIRAV11,BAT
 kartik sharma, NIRAV11,BAT
@@ -62,15 +62,17 @@ Rinku Singh,BABA11,BAT
 Shivam Dube,BABA11,BAT
 Rowman Powell,BABA11,BAT
 Rashid Khan,BABA11,AR
-Mitchell Starc,BABA11,AR
+liam livingston,BABA11,AR
+rachin ravindra,BABA11,AR
+sherfane rutherford,BABA11,AR
 Varun Chakravarthy,BABA11,BOWL
-Zeeshan Ansai,BABA11,BOWL
+Zeeshan Ansari,BABA11,BOWL
 Mitchell Starc,BABA11,BOWL
 Mitchel Santner,BABA11,BOWL
 Ruturaj Gaikwad,DIPESH11,BAT
 Sai Sudharsan,DIPESH11,BAT
 Prabhsimran Singh,DIPESH11,BAT
-Priyansh Arya,DIPESH11,BAT
+priyansh arya,DIPESH11,BAT
 Mitchel Owen,DIPESH11,BAT
 Nehal Wadhera,DIPESH11,BAT
 Tristan Stubbs,DIPESH11,BAT
@@ -79,7 +81,7 @@ Pat Cummins,DIPESH11,AR
 Aiden Markram,DIPESH11,AR
 Tim David,DIPESH11,AR
 Cooper Conoly,DIPESH11,AR
-Arshdeep Singh,DIPESH11,BOWL
+arshdeep singh,DIPESH11,BOWL
 Avesh Khan,DIPESH11,BOWL
 Mukesh Kumar,DIPESH11,BOWL
 Aqib Nabi Dar,DIPESH11,BOWL
@@ -103,7 +105,7 @@ Matheesha Pathirana kkr,NAKUL11,BOWL
 M Siddharth lsg,NAKUL11,BOWL
 Ben Dwarshuis pbks,NAKUL11,BOWL
 Nandre Burger rr,NAKUL11,BOWL
-Phil Salt,SKY11, BAT
+phil salt,SKY11, BAT
 Mitchel March,SKY11,BAT
 Rohit Sharma,SKY11,BAT
 Shimron Hetmyer,SKY11,BAT
@@ -125,7 +127,7 @@ Devdutt Padikkal,HARSH11,BAT
 Ramkrishna Ghosh,HARSH11,BAT
 Venkatesh Iyer,HARSH11,BAT
 Shahrukh Khan,HARSH11,BAT
-Ashutosh Sharma,HARSH11,BAT
+ashutosh sharma,HARSH11,BAT
 Tilak Varma,HARSH11,BAT
 Shashank Singh,HARSH11, BAT
 Sameer Rizvi,HARSH11,BAT
@@ -144,7 +146,7 @@ Suryakumar Yadav,AMEY11,BAT
 Nicholas Pooran,AMEY11,BAT
 Nitish Rana,AMEY11,BAT
 Aniket Verma,AMEY11,BAT
-Akshat Raghuwanshi,AMEY11,BAT
+akshat raghuwanshi,AMEY11,BAT
 Himmat Singh,AMEY11,BAT
 Suryansh Shegde,AMEY11,BAT
 Tejasvi Singh,AMEY11,BAT
