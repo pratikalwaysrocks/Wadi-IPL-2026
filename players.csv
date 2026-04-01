@@ -1,7 +1,7 @@
 Player,Team,Role
-MS Dhoni CSK,NIRAV11,BAT
-Rishabh Pant LSG,NIRAV11,BAT
-Travis Head srh,NIRAV11,BAT
+MS Dhoni,NIRAV11,BAT
+Rishabh Pant,NIRAV11,BAT
+Travis Head,NIRAV11,BAT
 jitesh sharma,NIRAV11,BAT
 rajat patidar,NIRAV11,BAT
 Dewald Brevis,NIRAV11,BAT
@@ -15,24 +15,24 @@ Mohsin Khan,NIRAV11,BOWL
 Brydon Carse,NIRAV11,BOWL
 Mayank Markande,NIRAV11,BOWL
 Umran Malik,NIRAV11,BOWL
-Ishan Kishan srh,MEET11,BAT
-Shubman Gill gt,MEET11,BAT
-Ajinkya Rahane kkr,MEET11,BAT
-vaibhav suryavanshi rr,MEET11,BAT
-ramandeep singh kkr,MEET11,BAT
-karun nair dc,MEET11,BAT
-jacob bethel rcb,MEET11,AR
-vipraj nigam dc,MEET11,AR
-Rahul Tewatia gt,MEET11,AR
-Jason Holder gt,MEET11,AR
-kamindu mendis srh,MEET11,BOWL
-tushar deshpande rr,MEET11,BOWL
-Ravi Bishnoi rr,MEET11,BOWL
-Khaleel Ahmed csk,MEET11,BOWL
-am ghazanfar mi,MEET11,BOWL
-anshul kamboj csk,MEET11,BOWL
-Harsh Dubey srh,MEET11,BOWL
-Kuldeep sen rr,MEET11,BOWL
+Ishan Kishan,MEET11,BAT
+Shubman Gill,MEET11,BAT
+Ajinkya Rahane,MEET11,BAT
+vaibhav suryavanshi,MEET11,BAT
+ramandeep singh,MEET11,BAT
+karun nair,MEET11,BAT
+jacob bethel,MEET11,AR
+vipraj nigam,MEET11,AR
+Rahul Tewatia,MEET11,AR
+Jason Holder,MEET11,AR
+kamindu mendis,MEET11,BOWL
+tushar deshpande,MEET11,BOWL
+Ravi Bishnoi,MEET11,BOWL
+Khaleel Ahmed,MEET11,BOWL
+am ghazanfar,MEET11,BOWL
+anshul kamboj,MEET11,BOWL
+Harsh Dubey,MEET11,BOWL
+Kuldeep sen,MEET11,BOWL
 Quinton de Kock,VATSAL11,BAT
 Heinrich Klaasen,VATSAL11,BAT
 Tom Banton,VATSAL11,BAT
@@ -54,7 +54,7 @@ Rahul Chahar,VATSAL11,BOWL
 Sanju Samson,BABA11,BAT
 Jos Inglis,BABA11,BAT
 David Miller,BABA11,BAT
-Dhruv Jurel,BABA11,BAT
+dhruv chand jurel,BABA11,BAT
 Ayush Badoni,BABA11,BAT
 Prithvi Shaw,BABA11,BAT
 ryan rickelton,BABA11,BAT
@@ -82,43 +82,43 @@ Aiden Markram,DIPESH11,AR
 Tim David,DIPESH11,AR
 Cooper Connolly,DIPESH11,AR
 arshdeep singh,DIPESH11,BOWL
-Avesh Khan,DIPESH11,BOWL
+avesh khan,DIPESH11,BOWL
 Mukesh Kumar,DIPESH11,BOWL
 Aqib Nabi Dar,DIPESH11,BOWL
 Rasik Dar Salam,DIPESH11,BOWL
 Xavier Bartlett,DIPESH11,BOWL
-Yashasvi Jaiswal rr,NAKUL11,BAT
-KL Rahul dc,NAKUL11,BAT
-Shreyas Iyer PBKS,NAKUL11,BAT
-Jos Buttler gt,NAKUL11,BAT
+Yashasvi Jaiswal,NAKUL11,BAT
+KL Rahul,NAKUL11,BAT
+Shreyas Iyer,NAKUL11,BAT
+Jos Buttler,NAKUL11,BAT
 Urvil Patel,NAKUL11,BAT
 Arshin Kulkarni,NAKUL11,BAT
-Nishant Sindhu gt,NAKUL11,AR
-Jayant Yadav gt,NAKUL11,AR
-Ajay Mandal dc,NAKUL11,AR
-Will Jacks mi,NAKUL11,AR
-Riyan Parag rr,NAKUL11,AR
-Kagiso Rabada gt,NAKUL11,BOWL
-Josh Hazelwood rcb,NAKUL11,BOWL
-Kyle Jamieson dc,NAKUL11,BOWL
-Matheesha Pathirana kkr,NAKUL11,BOWL
-M Siddharth lsg,NAKUL11,BOWL
-Ben Dwarshuis pbks,NAKUL11,BOWL
-Nandre Burger rr,NAKUL11,BOWL
+Nishant Sindhu,NAKUL11,AR
+Jayant Yadav,NAKUL11,AR
+Ajay Mandal,NAKUL11,AR
+Will Jacks,NAKUL11,AR
+Riyan Parag,NAKUL11,AR
+Kagiso Rabada,NAKUL11,BOWL
+Josh Hazelwood,NAKUL11,BOWL
+Kyle Jamieson,NAKUL11,BOWL
+Matheesha Pathirana,NAKUL11,BOWL
+M Siddharth,NAKUL11,BOWL
+Ben Dwarshuis,NAKUL11,BOWL
+Nandre Burger,NAKUL11,BOWL
 philip salt,SKY11, BAT
-Mitchel March,SKY11,BAT
+Mitchel Marsh,SKY11,BAT
 Rohit Sharma,SKY11,BAT
 Shimron Hetmyer,SKY11,BAT
 Manish Pandey,SKY11,BAT
 Pathum Nissanka,SKY11,BAT
 Hardik Pandya,SKY11,AR
-Jamie Overton csk,SKY11,AR
-Donovan Ferreira rr,SKY11,AR
+Jamie Overton,SKY11,AR
+Donovan Ferreira,SKY11,AR
 Harshal Patel,SKY11,BOWL
 Kartik Tyagi,SKY11,BOWL
 Lungi Ngidi,SKY11,BOWL
 vijaykumar vyshak,SKY11,BOWL
-Mukesh Choudhary csk,SKY11,BOWL
+Mukesh Choudhary,SKY11,BOWL
 Gurjapneet Singh,SKY11,BOWL
 Arjun Tendulkar,SKY11,BOWL
 Kwena Maphaka,SKY11,BOWL
@@ -131,15 +131,15 @@ ashutosh sharma,HARSH11,BAT
 Tilak Varma,HARSH11,BAT
 Shashank Singh,HARSH11, BAT
 Sameer Rizvi,HARSH11,BAT
-Angkrish Raghuvanshi,HARSH11,BAT
+angkrish raghuvanshi,HARSH11,BAT
 Prashant Veer,HARSH11,BAT
-Washington SUndar,HARSH11,AR
+Washington Sundar,HARSH11,AR
 Axar Patel,HARSH11,AR
 Azmatullah Omarzai,HARSH11,AR
 Salil Arora,HARSH11,AR
 Jasprit Bumrah,HARSH11,BOWL
 Jaydev Unadkat,HARSH11,BOWL
-Mohammed Shami,HARSH11,BOWL
+mohammed shami,HARSH11,BOWL
 Trent Boult,HARSH11,BOWL
 Virat Kohli,AMEY11,BAT
 Suryakumar Yadav,AMEY11,BAT
@@ -152,9 +152,9 @@ Suryansh Shegde,AMEY11,BAT
 Tejasvi Singh,AMEY11,BAT
 Krunal Pandya,AMEY11,AR
 Jofra Archer,AMEY11,AR
-T Natarjan,AMEY11,AR
+T Natarajan,AMEY11,AR
 Yuzvendra Chahal,AMEY11,BOWL
-Bhuvaneshwar Kumar,AMEY11,BOWL
+bhuvneshwar kumar,AMEY11,BOWL
 Vaibhav Arora,AMEY11,BOWL
 Sai Kishor,AMEY11,BOWL
 Matt Henry,AMEY11,BOWL

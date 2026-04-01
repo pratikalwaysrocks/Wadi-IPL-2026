@@ -51,6 +51,14 @@ BLOCKED_MATCH_PAIRS = {
     ("sarfaraz khan", "shahrukh khan"),
     ("ashutosh sharma", "abhishek sharma"),
     ("abhishek sharma", "ashutosh sharma"),
+
+    # add these too
+    ("rashid khan", "avesh khan"),
+    ("avesh khan", "rashid khan"),
+    ("ashutosh sharma", "ashok sharma"),
+    ("ashok sharma", "ashutosh sharma"),
+    ("mohammed shami", "mohammed siraj"),
+    ("mohammed siraj", "mohammed shami"),
 }
 
 
@@ -175,16 +183,19 @@ def ai_style_match(player: str, stats_names: list[str]) -> Tuple[Optional[str], 
     if match:
         candidate, score, _ = match
 
-        if passes_structure_guard(player, candidate):
-            overlap = token_overlap_ratio(player, candidate)
+        # If the candidate is structurally unsafe, do NOT even show it as mismatch
+        if not passes_structure_guard(player, candidate):
+            return None, "no_stats_yet"
 
-            if score >= 94:
-                return candidate, f"ai_fuzzy_strong:{score}"
+        overlap = token_overlap_ratio(player, candidate)
 
-            if score >= 90 and overlap >= 0.5:
-                return candidate, f"ai_fuzzy:{score}"
+        if score >= 94:
+            return candidate, f"ai_fuzzy_strong:{score}"
 
-        if score >= 75:
+        if score >= 90 and overlap >= 0.5:
+            return candidate, f"ai_fuzzy:{score}"
+
+        if score >= 80:
             return None, f"possible_mismatch:{score}"
 
     return None, "no_stats_yet"
