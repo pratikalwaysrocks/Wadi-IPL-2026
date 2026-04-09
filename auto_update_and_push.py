@@ -26,9 +26,7 @@ def main() -> None:
         print("Starting automated update cycle")
         print("==============================")
 
-        # Sync first
         synced = run(["git", "pull", "--rebase", "origin", "main"])
-
         if not synced:
             print("Git sync failed. Skipping this cycle.")
             print("Sleeping for 10 minutes...")
