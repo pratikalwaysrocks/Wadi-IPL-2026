@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
+PYTHON = "/home/ubuntu/Wadi-IPL-2026/venv/bin/python"
 
 
 def run(cmd: list[str]) -> bool:
@@ -25,7 +26,14 @@ def main() -> None:
         print("Starting automated update cycle")
         print("==============================")
 
-        PYTHON = str(BASE_DIR / "venv" / "bin" / "python")
+        # Sync first
+        synced = run(["git", "pull", "--rebase", "origin", "main"])
+
+        if not synced:
+            print("Git sync failed. Skipping this cycle.")
+            print("Sleeping for 10 minutes...")
+            time.sleep(600)
+            continue
 
         ok_scrape = run([PYTHON, "ipl_stats_scraper.py"])
         ok_points = run([PYTHON, "fantasy_points_from_stats.py"]) if ok_scrape else False
@@ -35,17 +43,12 @@ def main() -> None:
 
             if has_staged_changes():
                 committed = run(["git", "commit", "-m", "auto update fantasy data"])
-
-                if committed:
-                    rebased = run(["git", "pull", "--rebase", "origin", "main"])
-                    pushed = run(["git", "push"]) if rebased else False
-                else:
-                    pushed = False
+                pushed = run(["git", "push"]) if committed else False
 
                 if pushed:
                     print("Updated files pushed to GitHub.")
                 else:
-                    print("Git sync/push failed.")
+                    print("Git push failed.")
             else:
                 print("No changes detected. Nothing to push.")
         else:
