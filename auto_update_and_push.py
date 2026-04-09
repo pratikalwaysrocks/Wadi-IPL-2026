@@ -25,8 +25,10 @@ def main() -> None:
         print("Starting automated update cycle")
         print("==============================")
 
-        ok_scrape = run(["python3", "ipl_stats_scraper.py"])
-        ok_points = run(["python3", "fantasy_points_from_stats.py"]) if ok_scrape else False
+        PYTHON = str(BASE_DIR / "venv" / "bin" / "python")
+
+        ok_scrape = run([PYTHON, "ipl_stats_scraper.py"])
+        ok_points = run([PYTHON, "fantasy_points_from_stats.py"]) if ok_scrape else False
 
         if ok_scrape and ok_points:
             run(["git", "add", "ipl_stats_2026.xlsx", "IPL_Fantasy_Points.xlsx"])
