@@ -24,23 +24,26 @@ while True:
     ok_scrape = run(["python3", "ipl_stats_scraper.py"])
     ok_points = run(["python3", "fantasy_points_from_stats.py"]) if ok_scrape else False
 
-    if ok_scrape and ok_points:
-        run(["git", "add", "ipl_stats_2026.xlsx", "IPL_Fantasy_Points.xlsx"])
+if ok_scrape and ok_points:
+    run(["git", "add", "ipl_stats_2026.xlsx", "IPL_Fantasy_Points.xlsx"])
 
-        if has_staged_changes():
-    committed = run(["git", "commit", "-m", "auto update fantasy data"])
-    if committed:
-        rebased = run(["git", "pull", "--rebase", "origin", "main"])
-        pushed = run(["git", "push"]) if rebased else False
-    else:
-        pushed = False
+    if has_staged_changes():
+        committed = run(["git", "commit", "-m", "auto update fantasy data"])
 
-    if pushed:
-        print("Updated files pushed to GitHub.")
+        if committed:
+            rebased = run(["git", "pull", "--rebase", "origin", "main"])
+            pushed = run(["git", "push"]) if rebased else False
+        else:
+            pushed = False
+
+        if pushed:
+            print("Updated files pushed to GitHub.")
+        else:
+            print("Git sync/push failed.")
     else:
-        print("Git sync/push failed.")
+        print("No changes detected. Nothing to push.")
 else:
-    print("No changes detected. Nothing to push.")
+    print("Update failed. Skipping git push this cycle.")
 
     print("Sleeping for 10 minutes...")
     time.sleep(600)
