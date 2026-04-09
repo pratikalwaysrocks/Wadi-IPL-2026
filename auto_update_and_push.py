@@ -29,12 +29,16 @@ while True:
 
         if has_staged_changes():
     committed = run(["git", "commit", "-m", "auto update fantasy data"])
-    pushed = run(["git", "push"]) if committed else False
+    if committed:
+        rebased = run(["git", "pull", "--rebase", "origin", "main"])
+        pushed = run(["git", "push"]) if rebased else False
+    else:
+        pushed = False
 
     if pushed:
         print("Updated files pushed to GitHub.")
     else:
-        print("Git push failed.")
+        print("Git sync/push failed.")
 else:
     print("No changes detected. Nothing to push.")
 
