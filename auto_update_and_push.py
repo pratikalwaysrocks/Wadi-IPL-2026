@@ -28,13 +28,15 @@ while True:
         run(["git", "add", "ipl_stats_2026.xlsx", "IPL_Fantasy_Points.xlsx"])
 
         if has_staged_changes():
-            run(["git", "commit", "-m", "auto update fantasy data"])
-            run(["git", "push"])
-            print("Updated files pushed to GitHub.")
-        else:
-            print("No changes detected. Nothing to push.")
+    committed = run(["git", "commit", "-m", "auto update fantasy data"])
+    pushed = run(["git", "push"]) if committed else False
+
+    if pushed:
+        print("Updated files pushed to GitHub.")
     else:
-        print("Update failed. Skipping git push this cycle.")
+        print("Git push failed.")
+else:
+    print("No changes detected. Nothing to push.")
 
     print("Sleeping for 10 minutes...")
     time.sleep(600)
