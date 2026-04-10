@@ -49,7 +49,6 @@ def save_status(update: dict) -> None:
 
 
 def check_data_source_status() -> str:
-    # Basic status. You can make this smarter later.
     return "healthy"
 
 
@@ -92,6 +91,11 @@ def update_history_files() -> bool:
 
 
 def main() -> None:
+    synced = run(["git", "pull", "--rebase", "origin", "main"])
+    if not synced:
+        print("Git sync failed.")
+        return
+
     cycle_time = now_iso()
     save_status(
         {
@@ -101,18 +105,6 @@ def main() -> None:
             "last_cycle_result": "running",
         }
     )
-
-    synced = run(["git", "pull", "--rebase", "origin", "main"])
-    if not synced:
-        save_status(
-            {
-                "last_cycle_finished": now_iso(),
-                "last_cycle_result": "git_sync_failed",
-                "server_status": check_server_status(),
-            }
-        )
-        print("Git sync failed.")
-        return
 
     ok_scrape = run([PYTHON, "ipl_stats_scraper.py"])
     if ok_scrape:
@@ -127,6 +119,15 @@ def main() -> None:
     ok_history = update_history_files() if ok_scrape and ok_points else False
 
     if ok_scrape and ok_points and ok_history:
+        save_status(
+            {
+                "last_cycle_finished": now_iso(),
+                "last_cycle_result": "success",
+                "server_status": check_server_status(),
+                "data_source_status": check_data_source_status(),
+            }
+        )
+
         run(
             [
                 "git",
@@ -144,38 +145,10 @@ def main() -> None:
             pushed = run(["git", "push"]) if committed else False
 
             if pushed:
-                save_status(
-                    {
-                        "last_successful_git_push_time": now_iso(),
-                        "last_cycle_finished": now_iso(),
-                        "last_cycle_result": "success",
-                        "server_status": check_server_status(),
-                        "data_source_status": check_data_source_status(),
-                    }
-                )
-                run(["git", "add", "update_status.json"])
-                if has_staged_changes():
-                    run(["git", "commit", "-m", "update automation status"])
-                    run(["git", "push"])
                 print("Updated files pushed to GitHub.")
             else:
-                save_status(
-                    {
-                        "last_cycle_finished": now_iso(),
-                        "last_cycle_result": "git_push_failed",
-                        "server_status": check_server_status(),
-                    }
-                )
                 print("Git push failed.")
         else:
-            save_status(
-                {
-                    "last_cycle_finished": now_iso(),
-                    "last_cycle_result": "no_changes",
-                    "server_status": check_server_status(),
-                    "data_source_status": check_data_source_status(),
-                }
-            )
             print("No changes detected. Nothing to push.")
     else:
         save_status(
@@ -186,7 +159,11 @@ def main() -> None:
                 "data_source_status": "issue" if not ok_scrape else check_data_source_status(),
             }
         )
-        print("Update failed. Skipping git push.")
+        run(["git", "add", "update_status.json"])
+        if has_staged_changes():
+            run(["git", "commit", "-m", "update automation status"])
+            run(["git", "push"])
+        print("Update failed. Skipping data push.")
 
 
 if __name__ == "__main__":
