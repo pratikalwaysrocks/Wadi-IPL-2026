@@ -96,10 +96,9 @@ def main() -> None:
         print("Git sync failed.")
         return
 
-    cycle_time = now_iso()
     save_status(
         {
-            "last_cycle_started": cycle_time,
+            "last_cycle_started": now_iso(),
             "server_status": check_server_status(),
             "data_source_status": "starting",
             "last_cycle_result": "running",
