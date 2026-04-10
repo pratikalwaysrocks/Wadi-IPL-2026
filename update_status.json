@@ -1,9 +1,9 @@
 {
-  "last_cycle_started": "2026-04-10T18:02:43.655491+00:00",
+  "last_cycle_started": "2026-04-10T20:30:03.724944+00:00",
   "server_status": "running",
-  "data_source_status": "starting",
-  "last_cycle_result": "git_sync_failed",
-  "last_successful_scrape_time": "2026-04-10T18:01:23.538133+00:00",
+  "data_source_status": "healthy",
+  "last_cycle_result": "success",
+  "last_successful_scrape_time": "2026-04-10T20:31:10.540412+00:00",
   "last_successful_git_push_time": "2026-04-10T18:01:30.463215+00:00",
-  "last_cycle_finished": "2026-04-10T18:02:43.659859+00:00"
+  "last_cycle_finished": "2026-04-10T20:31:17.218658+00:00"
 }
